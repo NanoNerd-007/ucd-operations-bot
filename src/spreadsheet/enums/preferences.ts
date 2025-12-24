@@ -1,0 +1,3 @@
+export enum Preferences {
+    SCHEDULED_PAYMENTS_NOTIFY = 'SCHEDULED_PAYMENTS_NOTIFY',
+}
