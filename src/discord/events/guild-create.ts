@@ -1,7 +1,9 @@
-import {deployCommands} from "../commands/deploy-commands";
-import {Guild} from "discord.js";
+import { Client, Guild } from "discord.js";
 
-export async function onGuildCreate(guild: Guild) {
-    console.log(`Joined guild: ${guild.name}`);
-    await deployCommands({ guildId: guild.id });
-}
+export default {
+  name: "guildCreate",
+  once: false,
+  execute(guild: Guild, client: Client) {
+    console.log(`Joined new guild: ${guild.name} (ID: ${guild.id})`);
+  },
+};

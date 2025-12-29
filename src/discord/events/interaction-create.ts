@@ -1,32 +1,29 @@
-import {commands} from "../commands";
-import {CommandInteraction, Interaction} from "discord.js";
-import {handleButtonInteraction} from "@app/discord/component-interactions/handle-button-interaction";
-import {handleModalInteraction} from "@app/discord/component-interactions/handle-modal-interaction";
+import { Events, Interaction } from "discord.js";
 
-export async function onInteractionCreate(interaction: Interaction) {
-    if (interaction.isCommand()) {
-        await handleCommand(interaction);
-        return;
-    }
+export const name = Events.InteractionCreate;
+export const once = false;
 
-    if (interaction.isButton()) {
-        await handleButtonInteraction(interaction);
-        return;
-    }
+export async function execute(interaction: Interaction) {
+  if (!interaction.isChatInputCommand()) return;
 
-    if (interaction.isModalSubmit()) {
-        await handleModalInteraction(interaction);
-        return;
-    }
+  const command = interaction.client.commands.get(interaction.commandName);
+  if (!command) return;
 
-    console.warn(`Unhandled interaction type: ${interaction.type}`);
-}
+  try {
+    await command.execute(interaction);
+  } catch (err) {
+    console.error(`Error executing ${interaction.commandName}`, err);
 
-async function handleCommand(interaction: CommandInteraction) {
-    const { commandName } = interaction;
-    if (commands[commandName as keyof typeof commands]) {
-        await commands[commandName as keyof typeof commands].execute(interaction);
+    if (interaction.replied || interaction.deferred) {
+      await interaction.followUp({
+        content: "❌ There was an error executing this command.",
+        ephemeral: true,
+      });
     } else {
-        console.warn(`Command ${commandName} not found.`);
+      await interaction.reply({
+        content: "❌ There was an error executing this command.",
+        ephemeral: true,
+      });
     }
+  }
 }

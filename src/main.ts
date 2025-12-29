@@ -1,16 +1,33 @@
-import {onMessageCreate} from "@app/discord/events/message-create";
-import {onGuildCreate} from "@app/discord/events/guild-create";
-import {discordClient} from "@app/discord/discord-client";
-import {onReady} from "@app/discord/events/ready";
-import {onInteractionCreate} from "@app/discord/events/interaction-create";
-import {config} from "@app/config";
-import {Events} from "discord.js";
+import { Client, GatewayIntentBits } from "discord.js";
+import fs from "fs";
+import path from "path";
+import "dotenv/config";
 
-discordClient.on(Events.ClientReady, onReady);
-discordClient.on(Events.GuildCreate, onGuildCreate);
-discordClient.on(Events.InteractionCreate, onInteractionCreate);
-discordClient.on(Events.MessageCreate, onMessageCreate);
-
-discordClient.login(config.DISCORD_TOKEN).then(() => {
-    console.log("Successfully logged in");
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+  ],
 });
+
+// ===== EVENT LOADER =====
+const eventsPath = path.join(__dirname, "discord", "events");
+const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith(".ts"));
+
+for (const file of eventFiles) {
+  const filePath = path.join(eventsPath, file);
+  const event = require(filePath).default;
+
+  if (!event?.name || !event?.execute) {
+    console.error(`❌ Event file ${file} is missing name or execute`);
+    continue;
+  }
+
+  if (event.once) {
+    client.once(event.name, (...args) => event.execute(...args));
+  } else {
+    client.on(event.name, (...args) => event.execute(...args));
+  }
+}
+
+// ===== LOGIN =====
+client.login(process.env.DISCORD_TOKEN);
