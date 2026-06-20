@@ -1,135 +1,263 @@
-# I Owe You Discord Bot
+# UCD Operations Bot
 
-**A Discord bot to keep track of who owes who money.**
+A Discord.js v14 + TypeScript bot for managing UCD operations directly from Discord using Google Sheets as the backend database.
 
-This bot keeps track of your financial exchanges with a roommate or friend, storing data securely in a Google Sheets file. It allows for easy submission of new entries and quick balance checks, all within your Discord server.
+## Features
 
+### Financial Management
 
-<img width="675" alt="Sending and receiving a message to the bot" src="https://github.com/user-attachments/assets/a7ffc4ad-9a0d-4449-bbb5-4a47ea5c121b" />
+* `/balance` — View account balances
+* `/pay` — Record payments and balance adjustments
+* Automatic balance tracking through Google Sheets
 
+### Account Management
 
-<img width="1449" alt="Overview of the spreadseet" src="https://github.com/user-attachments/assets/7ff32b47-b4be-418d-b7d5-d04e70131b6c" />
+* Track client accounts
+* Store contract/package information
+* Monitor account status
+* Track custom gear and remaining calls
 
-## Why Use This Bot?
+### Assignment Management
 
-This bot was created to simplify expense tracking for two individuals, removing the need to manually update a shared spreadsheet.
+* Store assignment information
+* Track required roles and slot availability
+* Manage vehicles and operational requirements
+* Monitor assignment status
 
-The bot doesn't require commands to add entries. Instead, it uses regular Discord messages with a flexible syntax that is very forgiving and can make a lot of assumptions on your behalf. This is especially useful when you're outside and want to add an entry immediately after making a purchase, so you don't forget to do it later.
+### Member Statistics
 
-The short message syntax also works well for quickly adding entries using your phone's voice dictation.
+* Track jobs joined
+* Reliability scoring
+* Money earned statistics
+* Member performance monitoring
 
-## Submitting Entries
+### Google Sheets Integration
 
-Depending on how you've set your environment variables, messages are parsed using either an LLM or regular expressions and consist of four parts:
+The bot uses Google Sheets as its primary database and automatically syncs data between Discord and the spreadsheet.
 
-### Required arguments
+## Spreadsheet Structure
 
--   `Amount` - The cost of the purchase
--   `Description` - The description of what was purchased
+### Accounts Sheet
 
-### Optional arguments
+| Column          |
+| --------------- |
+| Client ID       |
+| Name            |
+| Pack/Contract   |
+| Balance(UCD)    |
+| Custom Gear     |
+| Calls Remaining |
+| Status          |
 
--   `Name` - The name of the person who made the purchase
-    -   The name / nickname of the other person can be used to indicate that the amount is owed to them
-    -   If no name is found, the name of the user who submitted the message will be used
--   `Category` - Text that matches one of the configured categories / category keywords will be used as the category
-    -   If no category is found, the default category will be used
--   `Split` - How the purchase should be divided, this can either by `50/50`, or `Paid in full by other`
-    -   By default, this is assumed to be `50/50` 
+### Ledger Sheet
 
-### Full length message example
+| Column        |
+| ------------- |
+| TimeStamp     |
+| Type          |
+| Amount(UCD)   |
+| Description   |
+| Client/Member |
+| Reference ID  |
 
+### Assignments Sheet
+
+| Column           |
+| ---------------- |
+| Assignment ID    |
+| Time             |
+| TimeZone         |
+| Required Roles   |
+| Slots Filled     |
+| Vehicle(s)       |
+| Heat/Product Use |
+| Status           |
+
+### Stats Sheet
+
+| Column            |
+| ----------------- |
+| Member ID         |
+| Name              |
+| JobsJoined        |
+| Reliability       |
+| Money Earned(UCD) |
+
+## Installation
+
+### Requirements
+
+* Node.js 20+
+* Discord Bot Application
+* Google Cloud Project
+* Google Sheets API enabled
+
+### Clone Repository
+
+```bash
+git clone <repository-url>
+cd <repository-name>
+npm install
 ```
-John spent $12.48 for Netflix in subscriptions
+
+## Environment Variables
+
+Create a `.env` file:
+
+```env
+# Google
+GOOGLE_SERVICE_ACCOUNT_CLIENT_EMAIL=
+GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY=
+GOOGLE_SHEETS_SPREADSHEET_ID=
+
+# Discord
+DISCORD_TOKEN=
+DISCORD_CLIENT_ID=
+DISCORD_GUILD_ID=
+DISCORD_CHANNEL_ID=
 ```
 
-### Shortened message example
+## Google Cloud Setup
 
-Assuming John is the user writing this message, and Netflix is a keyword for the subscriptions category, the example above can be shortened to:
+### 1. Enable Google Sheets API
 
-```
-12.48 Netflix
-```
+Visit:
 
-## Commands
+https://console.cloud.google.com/apis/library/sheets.googleapis.com
 
-`/balance (month)` - Shows the current balance of the user. If no month is specified, the balance of the current month will be shown
+Enable the **Google Sheets API** for your project.
 
-`/pay (month)` - Add an entry to pay off any outstanding balances. If no month is specified, the balance will be paid off for the current month
+### 2. Create Service Account
 
-## Installation requirements
+1. Open Google Cloud Console
+2. Create a Service Account
+3. Generate a JSON key
+4. Copy:
 
-This bot requires self-hosting.
-
-_Hosting on a service such as Railway or Render is recommended. Make sure to set the environment variables in the hosting service._
-
-## Getting started
-
--   Clone the repository
--   Create a `.env` file in the root directory with the content found in [.env.example](.env.example)
-    -   Only variables starting with `GOOGLE` and `DISCORD` are required, the rest are optional and should only be changed if you intend on changing the layout of the spreadsheet
-
-### Creating a service account
-
-A service account is required to access the Google Sheets API. Follow the instructions [here](https://theoephraim.github.io/node-google-spreadsheet/#/guides/authentication?id=setting-up-your-quotapplicationquot) to create a service account and download the JSON file.
-
-**Make sure not to commit this file to source control.**
-
-From the JSON file, Add `client_email` as the value for `GOOGLE_SERVICE_ACCOUNT_CLIENT_EMAIL`, and `private_key` for `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` to your `.env` file.
-
-## Setting up the spreadsheet
-
--   Create a copy of the spreadsheet from [here](https://docs.google.com/spreadsheets/d/1q1HUeqKJajuoatVEWKznHumix4eqtkqrik-XKWadWgw/copy)
--   Share the spreadsheet with the `client_email` value, make sure to give it **Edit** permissions
--   Populate the cells found in the `Configuration` worksheet.
--   Copy the `Spreadsheet ID` from the URL of the spreadsheet and add it to `GOOGLE_SHEETS_SPREADSHEET_ID` in your `.env` file
-
-_The spreadsheet ID can be found in the URL of the spreadsheet:_
-
-```
-https://docs.google.com/spreadsheets/d/<SPREADSHEET ID>/edit#gid=0
+```json
+client_email
+private_key
 ```
 
-## Configuring for use with LLMs (OPTIONAL)
+into your `.env` file.
 
-This project uses Google's Gemini API to perform natural language processing.
-To get an API key, visit https://aistudio.google.com/api-keys.
+### 3. Share Spreadsheet
 
-Once you have a key, add it to your `.env` file as `GOOGLE_GEMINI_API_KEY`.
+Share the spreadsheet with:
 
-## Running the bot
+```text
+your-service-account@project.iam.gserviceaccount.com
+```
 
-### Local development
+Grant **Editor** permissions.
 
--   Run `npm install`
--   Run `npm run dev`
+## Discord Setup
 
-### Production
+### Required Intents
 
--   Run `npm build`, followed by `npm start`
+Enable:
 
-### Testing
+* Server Members Intent
+* Message Content Intent
 
--   Run `npm test` to run the test suite
+### Invite Bot
 
-## Setting up in your server
+Use OAuth2 URL Generator with:
 
--   If you haven't already enabled developer mode in Discord, go to settings > advanced, and enable developer mode.
-    This will allow you to copy IDs for servers and channels.
--   Right click on the server you want to add the bot to and select `Copy Server ID`
-    -   Add the server ID to `DISCORD_GUILD_ID` in your `.env` file
--   Right click on the text channel you want to use to interact with the bot and select `Copy Channel ID`
-    -   Add the channel ID to `DISCORD_CHANNEL_ID` in your `.env` file
+* bot
+* applications.commands
 
+Permissions:
 
--   Create a new Discord application and bot [here](https://discord.com/developers/applications)
--   Copy the bot token and add it to `DISCORD_TOKEN` in your `.env` file
--   Under `Bot`, enable `SERVER MEMBERS INTENT` and `MESSAGE CONTENT INTENT`
+* Send Messages
+* Read Messages
+* Use Slash Commands
+* Embed Links
 
-    ![Discord privileged gateway intents](https://github.com/Lyubomir-Todorov/i-owe-you-discord-bot/assets/73316704/5d89b006-098a-4643-9205-ab3d9c74cd34)
+## Development
 
--   Under `OAuth2`, select the client ID and add it to `DISCORD_CLIENT_ID` in your `.env` file
+Start development server:
 
-    ![Discord OAuth2](https://github.com/Lyubomir-Todorov/i-owe-you-discord-bot/assets/73316704/a4518787-3848-454c-8ae1-0f70ab5c58b3)
+```bash
+npm run dev
+```
 
--   Finally, head to `Installation`. Set `Install link` to `Discord provided link` and use it to invite the bot to your server
+Build production version:
+
+```bash
+npm run build
+```
+
+Run production build:
+
+```bash
+npm start
+```
+
+## Current Commands
+
+### /balance
+
+Displays the account balance associated with the user's Discord ID.
+
+### /pay
+
+Records a payment transaction and updates account balances.
+
+### /sheets-info
+
+Displays spreadsheet connection and configuration information.
+
+## Tech Stack
+
+* Discord.js v14
+* TypeScript
+* Google Sheets API
+* Google Cloud Service Accounts
+* tsx
+* Node.js
+
+## Project Structure
+
+```text
+src/
+├── discord/
+│   ├── commands/
+│   ├── events/
+│   └── component-interactions/
+├── spreadsheet/
+├── services/
+├── loaders/
+├── models/
+├── google-sheets/
+└── types/
+```
+
+## Troubleshooting
+
+### Google Sheets API Error
+
+If you receive:
+
+```text
+Google Sheets API has not been used in project before or it is disabled
+```
+
+Enable the Google Sheets API in Google Cloud Console and wait a few minutes for propagation.
+
+### Slash Commands Not Appearing
+
+Verify:
+
+* DISCORD_CLIENT_ID is correct
+* DISCORD_GUILD_ID is correct
+* Bot has applications.commands scope
+* Bot has been reinvited after permission changes
+
+### No Account Found
+
+Ensure the user's Discord ID exists in the Accounts sheet under the Client ID column.
+
+## License
+
+MIT License
